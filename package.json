@@ -1,0 +1,24 @@
+{
+  "name": "orbs-community-portal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Orbs community portal information architecture prototype",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check overview-data.mjs && node --check public/app.js && node --check pos-data.mjs && node --check proposal-markdown.mjs && node --check community-data.mjs && node --check link-thumbnail.mjs && node --check account-data.mjs && node --check request-policy.mjs",
+    "test": "node --test overview-data.test.mjs pos-data.test.mjs proposal-markdown.test.mjs community-data.test.mjs link-thumbnail.test.mjs account-data.test.mjs request-policy.test.mjs",
+    "build:wallet": "esbuild src/wallet.js --bundle --format=esm --minify --outfile=public/wallet.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@reown/appkit": "1.8.24",
+    "@reown/appkit-adapter-ethers": "1.8.24",
+    "cheerio": "1.2.0",
+    "esbuild": "0.28.2",
+    "ethers": "6.17.0",
+    "marked": "18.1.2",
+    "sanitize-html": "2.18.1"
+  }
+}

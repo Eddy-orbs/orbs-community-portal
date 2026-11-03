@@ -1,0 +1,3 @@
+import { marked } from 'marked';
+import sanitizeHtml from 'sanitize-html';
+export function renderProposalMarkdown(body){return sanitizeHtml(marked.parse(body||'No description provided.',{gfm:true,breaks:false,async:false}),{allowedTags:[...sanitizeHtml.defaults.allowedTags,'img','del'],allowedAttributes:{a:['href','title','target','rel'],img:['src','alt','title','loading'],code:['class'],th:['align'],td:['align']},allowedSchemes:['https','http','mailto'],allowedSchemesByTag:{img:['https','http']},allowProtocolRelative:false,transformTags:{a:(tag,attrs)=>({tagName:'a',attribs:{...attrs,target:'_blank',rel:'noopener noreferrer'}}),img:(tag,attrs)=>({tagName:'img',attribs:{...attrs,loading:'lazy'}})}});}
