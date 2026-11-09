@@ -1,3 +1,4 @@
+import {getParticipation} from "./participation-data.mjs";
 import http from 'node:http';
 import { isIP } from 'node:net';
 import { pathToFileURL } from 'node:url';
@@ -25,6 +26,7 @@ export function createPortalServer(loaders={getAccount,getCommunity,getOverview}
     if(req.method!=='GET'){res.setHeader('Allow','GET');return send(res,405,{error:'Method not allowed'});}
     if(!apiGlobal.take('all')||!apiClient.take(clientAddress(req)))throw new BusyError();
     const force=/\bno-cache\b|\bmax-age=0\b/i.test(String(req.headers['cache-control']||''))||req.headers.pragma==='no-cache';
+    if(pathname==='/api/participation'){const data=await getParticipation({force});return send(res,200,data,'application/json','private, max-age=600');}
     if(pathname==='/api/account'){
      const address=url.searchParams.get('address'),part=url.searchParams.get('part');
      if(!/^0x[0-9a-f]{40}$/i.test(address||'')||!['ethereum','polygon','history-ethereum','history-polygon','votes'].includes(part))return send(res,400,{error:'Invalid account request'});

@@ -5,8 +5,8 @@
   "description": "Orbs community portal information architecture prototype",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check overview-data.mjs && node --check public/app.js && node --check pos-data.mjs && node --check proposal-markdown.mjs && node --check community-data.mjs && node --check link-thumbnail.mjs && node --check account-data.mjs && node --check request-policy.mjs && node --check src/app.js && node --check src/pos-models.js && node --check src/ui/dom.js && node --check src/ui/address.js && node --check public/i18n.js && node --check src/views.js && node --check src/assets.js",
-    "test": "node --test overview-data.test.mjs pos-data.test.mjs proposal-markdown.test.mjs community-data.test.mjs link-thumbnail.test.mjs account-data.test.mjs request-policy.test.mjs src/pos-models.test.mjs guardian-colors.test.mjs",
+    "check": "node --check server.mjs && node --check overview-data.mjs && node --check public/app.js && node --check pos-data.mjs && node --check proposal-markdown.mjs && node --check community-data.mjs && node --check link-thumbnail.mjs && node --check account-data.mjs && node --check request-policy.mjs && node --check src/app.js && node --check src/pos-models.js && node --check src/ui/dom.js && node --check src/ui/address.js && node --check public/i18n.js && node --check src/views.js && node --check src/assets.js && node --check participation-data.mjs",
+    "test": "node --test overview-data.test.mjs pos-data.test.mjs proposal-markdown.test.mjs community-data.test.mjs link-thumbnail.test.mjs account-data.test.mjs request-policy.test.mjs src/pos-models.test.mjs guardian-colors.test.mjs participation-data.test.mjs",
     "build:wallet": "esbuild src/wallet.js --bundle --format=esm --minify --outfile=public/wallet.js",
     "build:app": "esbuild src/app.js --bundle --format=esm --outfile=public/app.js",
     "build": "npm run build:app && npm run build:wallet"

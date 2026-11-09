@@ -1,3 +1,4 @@
+import { participationSince } from "../participation-model.mjs";
 import { committeeColorMap, guardianColor, guardianInitials } from "../guardian-colors.mjs";
 import { createViews } from "./views.js";
 import { metricLogos, stakingAppIcons, icons } from "./assets.js";
@@ -81,6 +82,7 @@ async function loadOverview() {
     if (!data.sources) throw Error("Invalid overview");
     overviewData = data;
     refreshGuardianColors();
+    document.querySelectorAll("[data-guardian-voted]").forEach(el=>{el.innerHTML=guardianParticipation(el.dataset.guardianVoted);});
     overviewError = false;
   } catch {
     overviewError = true;
@@ -122,6 +124,7 @@ function guardianSelfStakeRatio(d) {
 }
 
 function liveGuardianModal(id) {
+  loadParticipation();
   const g = guardianRows()?.find((g) => g.address === id);
   if (!g) return;
   const row = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
@@ -134,7 +137,7 @@ function liveGuardianModal(id) {
     }
   })();
   openModal(
-    `<div class="guardian-modal-header"><div class="eyebrow">${t("Guardian profile")}</div><div class="guardian-profile-identity">${guardianAvatar(g.address, g.name)}<h2 id="dialog-title">${escapeHTML(g.name)}</h2></div><p class="guardian-full-address"><span class="guardian-address-text" data-full-address="${escapeHTML(g.address)}" title="${escapeHTML(g.address)}">${escapeHTML(g.address)}</span>${copyAddressButton(g.address)}</p></div><div class="guardian-modal-details" tabindex="0"><dl class="detail-list">${row(t("Rank"), g.rank ? "#" + g.rank : t("Unavailable"))}${row(t("Effective stake"), g.total !== null ? liveNumber(g.total) + " ORBS" : t("Unavailable"))}${row(t("Certified"), g.ethereum.certified === null ? t("Unavailable") : g.ethereum.certified ? t("Yes") : t("No"))}${website ? row(t("Website"), ext(website, t("Visit website"))) : ""}</dl>${[
+    `<div class="guardian-modal-header"><div class="eyebrow">${t("Guardian profile")}</div><div class="guardian-profile-identity">${guardianAvatar(g.address, g.name)}<h2 id="dialog-title">${escapeHTML(g.name)}</h2></div><p class="guardian-full-address"><span class="guardian-address-text" data-full-address="${escapeHTML(g.address)}" title="${escapeHTML(g.address)}">${escapeHTML(g.address)}</span>${copyAddressButton(g.address)}</p></div><div class="guardian-modal-details" tabindex="0"><dl class="detail-list">${row(t("Rank"), g.rank ? "#" + g.rank : t("Unavailable"))}${row(t("Effective stake"), g.total !== null ? liveNumber(g.total) + " ORBS" : t("Unavailable"))}${row(t("Certified"), g.ethereum.certified === null ? t("Unavailable") : g.ethereum.certified ? t("Yes") : t("No"))}${website ? row(t("Website"), ext(website, t("Visit website"))) : ""}${row(votedLabel(), `<span data-guardian-voted="${escapeHTML(g.address)}">${guardianParticipation(g.address)}</span>`)}</dl>${[
       ["Ethereum", g.ethereum],
       ["Polygon", g.polygon],
     ]
@@ -382,9 +385,27 @@ function scheduleRender() {
       render();
     });
 }
+let participationData = null, participationLoading = false, participationFetched = 0, participationError = false;
+async function loadParticipation() {
+  if (participationLoading || Date.now()-participationFetched<600000) return;
+  participationLoading=true;
+  try {const r=await fetch('/api/participation?v=2',{signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error();const data=await r.json();if(!Number.isInteger(data.total)||!data.counts)throw Error();participationData=data;participationError=false;}
+  catch {participationError=true;}
+  finally {participationLoading=false;participationFetched=Date.now();document.querySelectorAll('[data-guardian-voted]').forEach(el=>{el.innerHTML=guardianParticipation(el.dataset.guardianVoted);});if(location.hash==='#pos')scheduleRender();}
+}
+function guardianParticipation(address) {
+  if(participationError)return `<span class="muted">${t("Unavailable")}</span>`;
+  if(!participationData)return `<span class="muted">${t("Reading…")}</span>`;
+  const guardian=guardianRows()?.find(g=>g.address===address.toLowerCase());
+  const times=[guardian?.ethereum?.registrationTime,guardian?.polygon?.registrationTime].filter(time=>Number.isFinite(time)&&time>0);
+  const result=participationSince(participationData,address,times.length?Math.min(...times):null);
+  return result ? `${result.count} / ${result.total}` : `<span class="muted">${t("Unavailable")}</span>`;
+}
+setInterval(()=>{if(!document.hidden&&location.hash==='#pos')loadParticipation();},30000);
 function render() {
   const route = location.hash.slice(1) || "overview";
   if (route === "community") loadCommunity();
+  if (route === "pos") loadParticipation();
   if (["overview", "pos", "dao", "mypage"].includes(route)) loadOverview();
   const pages = { overview, pos, dao, community, mypage };
   const aliases = {
@@ -513,6 +534,8 @@ const {
   stakeNumber,
   guardianRows,
   guardianAvatar,
+  guardianParticipation,
+  votedLabel,
   chartSeries,
   guardianSelfStakeRatio,
   shortAddress,
@@ -729,3 +752,37 @@ document.addEventListener("pointermove", (event) => {
     " ORBS";
   if (title.textContent !== text) title.textContent = text;
 });
+
+
+function votedLabel() {
+  return `${t("Voted")} <button type="button" class="voted-info" data-voted-info aria-label="${t("About voting participation")}" aria-expanded="false">i</button>`;
+}
+let votedInfoButton = null;
+function closeVotedInfo() {
+  document.getElementById('voted-tooltip')?.remove();
+  votedInfoButton?.setAttribute('aria-expanded','false');
+  votedInfoButton?.removeAttribute('aria-describedby');
+  votedInfoButton = null;
+}
+document.addEventListener('click', event => {
+  const button=event.target.closest('[data-voted-info]');
+  if(!button){if(!event.target.closest('#voted-tooltip'))closeVotedInfo();return;}
+  const wasOpen=button===votedInfoButton;
+  closeVotedInfo();
+  if(wasOpen)return;
+  votedInfoButton=button;
+  const tip=document.createElement('div');
+  tip.id='voted-tooltip';tip.className='voted-tooltip';tip.setAttribute('role','tooltip');tip.setAttribute('popover','manual');
+  tip.textContent=t("Proposals this guardian voted on / all proposals created since its earliest recorded guardian registration.");
+  (button.closest('dialog') || document.body).append(tip);
+  tip.showPopover?.();
+  const rect=button.getBoundingClientRect(), box=tip.getBoundingClientRect();
+  tip.style.left=Math.max(12,Math.min(rect.left,innerWidth-box.width-12))+'px';
+  tip.style.top=(rect.bottom+8+box.height<=innerHeight-12?rect.bottom+8:Math.max(12,rect.top-box.height-8))+'px';
+  button.setAttribute('aria-expanded','true');button.setAttribute('aria-describedby',tip.id);
+});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&votedInfoButton){event.preventDefault();event.stopImmediatePropagation();closeVotedInfo();}},true);
+window.addEventListener('resize',closeVotedInfo);
+document.addEventListener('scroll',closeVotedInfo,true);
+document.addEventListener('close',closeVotedInfo,true);
+window.addEventListener('hashchange',closeVotedInfo);

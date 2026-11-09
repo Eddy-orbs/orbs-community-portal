@@ -2799,3 +2799,10 @@ html:lang(ja) {
 .guardian-profile-identity { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .guardian-profile-identity h2 { min-width: 0; margin: 0; }
 .wallet-chain button[data-guardian] { display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+
+.guardian-voted { white-space: nowrap; align-self: center; }
+
+.voted-info { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 17px; height: 17px; padding: 0; margin-left: 3px; border: 1px solid currentColor; border-radius: 50%; background: transparent; color: var(--muted); font: 400 11px/1 sans-serif; cursor: pointer; }
+.voted-info:hover, .voted-info[aria-expanded="true"] { color: var(--ink); }
+.voted-info:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.voted-tooltip { position: fixed; inset: auto; margin: 0; z-index: 1000; box-sizing: border-box; width: min(300px, calc(100vw - 24px)); padding: 12px 14px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 24px #0002; font-size: 13px; line-height: 1.6; white-space: normal; text-align: left; }

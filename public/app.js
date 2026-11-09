@@ -1,3 +1,11 @@
+// participation-model.mjs
+function participationSince(data, address, registeredAt) {
+  if (!Number.isFinite(registeredAt) || registeredAt <= 0 || !Array.isArray(data?.proposals) || !data?.votedProposalIds) return null;
+  const eligible = new Set(data.proposals.filter((p) => p.created >= registeredAt).map((p) => p.id));
+  const voted = new Set(data.votedProposalIds[String(address).toLowerCase()] || []);
+  return { total: eligible.size, count: [...voted].filter((id) => eligible.has(id)).length };
+}
+
 // guardian-colors.mjs
 var GUARDIAN_PALETTE = ["#7A89E9", "#DC8AE0", "#63DDB5", "#49AAFF", "#FFADAE", "#A17AE9", "#2CEDFC", "#3346F2", "#C6DC82", "#AB83B5", "#36C9CA", "#E998BD", "#B99DEE", "#35B8A6", "#6298DD", "#E8AF7D", "#B56BBC", "#A6C98B", "#7DA6BC", "#CC789E", "#92D6C8", "#DDC477"];
 var DEFAULT_GUARDIAN_COLOR = "#89849A";
@@ -36,6 +44,8 @@ function createViews(context) {
     stakeNumber: stakeNumber2,
     guardianRows: guardianRows2,
     guardianAvatar: guardianAvatar2,
+    guardianParticipation: guardianParticipation2,
+    votedLabel: votedLabel2,
     chartSeries: chartSeries2,
     guardianSelfStakeRatio: guardianSelfStakeRatio2,
     shortAddress: shortAddress2,
@@ -213,7 +223,7 @@ function createViews(context) {
     const list = all.filter(
       (g) => (g.name + " " + g.address).toLowerCase().includes(state2.search.toLowerCase())
     );
-    return `<p class="muted">${list.length} ${t2("guardians \xB7 Ethereum registry \xB7 Ranked by combined effective stake")}</p>${!posSources2().polygon?.data ? '<p class="muted">' + t2("Polygon data unavailable. Combined rankings cannot be calculated.") + "</p>" : ""}<div class="guardian-table"><div class="guardian-table-head"><span>${t2("Rank / Guardian")}</span><span>${t2("Effective stake")}</span><span>${t2("Self Stake ratio")}</span><span>${t2("Network")}</span><span>${t2("Profile")}</span></div>${list.map((g) => `<article class="guardian-row"><div class="guardian-name"><span class="rank">${g.rank ? "#" + g.rank : "\u2014"}</span>${guardianAvatar2(g.address, g.name)}<div><h3>${escapeHTML2(g.name)}</h3><span class="muted guardian-address"><span class="guardian-address-text" data-full-address="${escapeHTML2(g.address)}" title="${escapeHTML2(g.address)}">${escapeHTML2(g.address)}</span>${copyAddressButton2(g.address)}</span></div></div><div class="guardian-stakes"><span class="mobile-label">${t2("Effective stake")}</span><div>${networkSymbol2("Ethereum")}<span>${stakeNumber2(g.ethereum.effectiveStake)} ORBS</span></div>${g.polygon ? `<div>${networkSymbol2("Polygon")}<span>${stakeNumber2(g.polygon.effectiveStake)} ORBS</span></div>` : !g.polygonKnown ? '<span class="muted">' + t2("Polygon unavailable") + "</span>" : ""}</div><div class="guardian-ratios"><span class="mobile-label">${t2("Self Stake ratio")}</span><div>${networkSymbol2("Ethereum")}<span>${guardianSelfStakeRatio2(g.ethereum)}</span></div>${g.polygon ? `<div>${networkSymbol2("Polygon")}<span>${guardianSelfStakeRatio2(g.polygon)}</span></div>` : !g.polygonKnown ? `<span class="muted">${t2("Polygon unavailable")}</span>` : ""}</div><div class="guardian-networks">${pill2("Ethereum", "gray")}${g.polygon ? pill2("Polygon", "gray") : ""}</div><button class="button outline small" data-guardian="${g.address}" data-network="Ethereum">${t2("Guardian Profile")}</button></article>`).join("") || '<div class="empty">' + t2("No guardians match your search.") + "</div>"}</div>`;
+    return `<p class="muted">${list.length} ${t2("guardians \xB7 Ethereum registry \xB7 Ranked by combined effective stake")}</p>${!posSources2().polygon?.data ? '<p class="muted">' + t2("Polygon data unavailable. Combined rankings cannot be calculated.") + "</p>" : ""}<div class="guardian-table"><div class="guardian-table-head"><span>${t2("Rank / Guardian")}</span><span>${t2("Effective stake")}</span><span>${t2("Self Stake ratio")}</span><span>${votedLabel2()}</span><span>${t2("Profile")}</span></div>${list.map((g) => `<article class="guardian-row"><div class="guardian-name"><span class="rank">${g.rank ? "#" + g.rank : "\u2014"}</span>${guardianAvatar2(g.address, g.name)}<div><h3>${escapeHTML2(g.name)}</h3><span class="muted guardian-address"><span class="guardian-address-text" data-full-address="${escapeHTML2(g.address)}" title="${escapeHTML2(g.address)}">${escapeHTML2(g.address)}</span>${copyAddressButton2(g.address)}</span></div></div><div class="guardian-stakes"><span class="mobile-label">${t2("Effective stake")}</span><div>${networkSymbol2("Ethereum")}<span>${stakeNumber2(g.ethereum.effectiveStake)} ORBS</span></div>${g.polygon ? `<div>${networkSymbol2("Polygon")}<span>${stakeNumber2(g.polygon.effectiveStake)} ORBS</span></div>` : !g.polygonKnown ? '<span class="muted">' + t2("Polygon unavailable") + "</span>" : ""}</div><div class="guardian-ratios"><span class="mobile-label">${t2("Self Stake ratio")}</span><div>${networkSymbol2("Ethereum")}<span>${guardianSelfStakeRatio2(g.ethereum)}</span></div>${g.polygon ? `<div>${networkSymbol2("Polygon")}<span>${guardianSelfStakeRatio2(g.polygon)}</span></div>` : !g.polygonKnown ? `<span class="muted">${t2("Polygon unavailable")}</span>` : ""}</div><div class="guardian-voted"><span class="mobile-label">${votedLabel2()}</span><span>${guardianParticipation2(g.address)}</span></div><button class="button outline small" data-guardian="${g.address}" data-network="Ethereum">${t2("Guardian Profile")}</button></article>`).join("") || '<div class="empty">' + t2("No guardians match your search.") + "</div>"}</div>`;
   }
   function pos2() {
     const {
@@ -1235,6 +1245,9 @@ async function loadOverview() {
     if (!data.sources) throw Error("Invalid overview");
     overviewData = data;
     refreshGuardianColors();
+    document.querySelectorAll("[data-guardian-voted]").forEach((el) => {
+      el.innerHTML = guardianParticipation(el.dataset.guardianVoted);
+    });
     overviewError = false;
   } catch {
     overviewError = true;
@@ -1264,6 +1277,7 @@ function guardianSelfStakeRatio(d) {
   }) + "%" : "N/A" : t("Unavailable");
 }
 function liveGuardianModal(id) {
+  loadParticipation();
   const g = guardianRows()?.find((g2) => g2.address === id);
   if (!g) return;
   const row = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
@@ -1276,7 +1290,7 @@ function liveGuardianModal(id) {
     }
   })();
   openModal(
-    `<div class="guardian-modal-header"><div class="eyebrow">${t("Guardian profile")}</div><div class="guardian-profile-identity">${guardianAvatar(g.address, g.name)}<h2 id="dialog-title">${escapeHTML(g.name)}</h2></div><p class="guardian-full-address"><span class="guardian-address-text" data-full-address="${escapeHTML(g.address)}" title="${escapeHTML(g.address)}">${escapeHTML(g.address)}</span>${copyAddressButton(g.address)}</p></div><div class="guardian-modal-details" tabindex="0"><dl class="detail-list">${row(t("Rank"), g.rank ? "#" + g.rank : t("Unavailable"))}${row(t("Effective stake"), g.total !== null ? liveNumber(g.total) + " ORBS" : t("Unavailable"))}${row(t("Certified"), g.ethereum.certified === null ? t("Unavailable") : g.ethereum.certified ? t("Yes") : t("No"))}${website ? row(t("Website"), ext(website, t("Visit website"))) : ""}</dl>${[
+    `<div class="guardian-modal-header"><div class="eyebrow">${t("Guardian profile")}</div><div class="guardian-profile-identity">${guardianAvatar(g.address, g.name)}<h2 id="dialog-title">${escapeHTML(g.name)}</h2></div><p class="guardian-full-address"><span class="guardian-address-text" data-full-address="${escapeHTML(g.address)}" title="${escapeHTML(g.address)}">${escapeHTML(g.address)}</span>${copyAddressButton(g.address)}</p></div><div class="guardian-modal-details" tabindex="0"><dl class="detail-list">${row(t("Rank"), g.rank ? "#" + g.rank : t("Unavailable"))}${row(t("Effective stake"), g.total !== null ? liveNumber(g.total) + " ORBS" : t("Unavailable"))}${row(t("Certified"), g.ethereum.certified === null ? t("Unavailable") : g.ethereum.certified ? t("Yes") : t("No"))}${website ? row(t("Website"), ext(website, t("Visit website"))) : ""}${row(votedLabel(), `<span data-guardian-voted="${escapeHTML(g.address)}">${guardianParticipation(g.address)}</span>`)}</dl>${[
       ["Ethereum", g.ethereum],
       ["Polygon", g.polygon]
     ].map(
@@ -1493,9 +1507,46 @@ function scheduleRender() {
       render();
     });
 }
+var participationData = null;
+var participationLoading = false;
+var participationFetched = 0;
+var participationError = false;
+async function loadParticipation() {
+  if (participationLoading || Date.now() - participationFetched < 6e5) return;
+  participationLoading = true;
+  try {
+    const r = await fetch("/api/participation?v=2", { signal: AbortSignal.timeout(3e4) });
+    if (!r.ok) throw Error();
+    const data = await r.json();
+    if (!Number.isInteger(data.total) || !data.counts) throw Error();
+    participationData = data;
+    participationError = false;
+  } catch {
+    participationError = true;
+  } finally {
+    participationLoading = false;
+    participationFetched = Date.now();
+    document.querySelectorAll("[data-guardian-voted]").forEach((el) => {
+      el.innerHTML = guardianParticipation(el.dataset.guardianVoted);
+    });
+    if (location.hash === "#pos") scheduleRender();
+  }
+}
+function guardianParticipation(address) {
+  if (participationError) return `<span class="muted">${t("Unavailable")}</span>`;
+  if (!participationData) return `<span class="muted">${t("Reading\u2026")}</span>`;
+  const guardian = guardianRows()?.find((g) => g.address === address.toLowerCase());
+  const times = [guardian?.ethereum?.registrationTime, guardian?.polygon?.registrationTime].filter((time) => Number.isFinite(time) && time > 0);
+  const result = participationSince(participationData, address, times.length ? Math.min(...times) : null);
+  return result ? `${result.count} / ${result.total}` : `<span class="muted">${t("Unavailable")}</span>`;
+}
+setInterval(() => {
+  if (!document.hidden && location.hash === "#pos") loadParticipation();
+}, 3e4);
 function render() {
   const route = location.hash.slice(1) || "overview";
   if (route === "community") loadCommunity();
+  if (route === "pos") loadParticipation();
   if (["overview", "pos", "dao", "mypage"].includes(route)) loadOverview();
   const pages = { overview, pos, dao, community, mypage };
   const aliases = {
@@ -1605,6 +1656,8 @@ var {
   stakeNumber,
   guardianRows,
   guardianAvatar,
+  guardianParticipation,
+  votedLabel,
   chartSeries,
   guardianSelfStakeRatio,
   shortAddress,
@@ -1786,3 +1839,48 @@ document.addEventListener("pointermove", (event) => {
   const text = new Date(point.time * 1e3).toLocaleString(portalLocale()) + ": " + liveNumber(point.value) + " ORBS";
   if (title.textContent !== text) title.textContent = text;
 });
+function votedLabel() {
+  return `${t("Voted")} <button type="button" class="voted-info" data-voted-info aria-label="${t("About voting participation")}" aria-expanded="false">i</button>`;
+}
+var votedInfoButton = null;
+function closeVotedInfo() {
+  document.getElementById("voted-tooltip")?.remove();
+  votedInfoButton?.setAttribute("aria-expanded", "false");
+  votedInfoButton?.removeAttribute("aria-describedby");
+  votedInfoButton = null;
+}
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-voted-info]");
+  if (!button) {
+    if (!event.target.closest("#voted-tooltip")) closeVotedInfo();
+    return;
+  }
+  const wasOpen = button === votedInfoButton;
+  closeVotedInfo();
+  if (wasOpen) return;
+  votedInfoButton = button;
+  const tip = document.createElement("div");
+  tip.id = "voted-tooltip";
+  tip.className = "voted-tooltip";
+  tip.setAttribute("role", "tooltip");
+  tip.setAttribute("popover", "manual");
+  tip.textContent = t("Proposals this guardian voted on / all proposals created since its earliest recorded guardian registration.");
+  (button.closest("dialog") || document.body).append(tip);
+  tip.showPopover?.();
+  const rect = button.getBoundingClientRect(), box = tip.getBoundingClientRect();
+  tip.style.left = Math.max(12, Math.min(rect.left, innerWidth - box.width - 12)) + "px";
+  tip.style.top = (rect.bottom + 8 + box.height <= innerHeight - 12 ? rect.bottom + 8 : Math.max(12, rect.top - box.height - 8)) + "px";
+  button.setAttribute("aria-expanded", "true");
+  button.setAttribute("aria-describedby", tip.id);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && votedInfoButton) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    closeVotedInfo();
+  }
+}, true);
+window.addEventListener("resize", closeVotedInfo);
+document.addEventListener("scroll", closeVotedInfo, true);
+document.addEventListener("close", closeVotedInfo, true);
+window.addEventListener("hashchange", closeVotedInfo);
