@@ -21,7 +21,7 @@ After cloning or downloading the repository, open a terminal in the project dire
 
 ```bash
 npm ci
-npm run build:wallet
+npm run build
 npm start
 ```
 
@@ -40,8 +40,8 @@ npm run check
 npm test
 ```
 
-To rebuild the wallet browser bundle after making changes:
+To rebuild the browser bundles after making changes:
 
 ```bash
-npm run build:wallet
+npm run build
 ```

@@ -6,7 +6,7 @@ import { getCommunity } from './community-data.mjs';
 import { getOverview } from './overview-data.mjs';
 import { readFile } from 'node:fs/promises';
 import { TokenBuckets, BusyError } from './request-policy.mjs';
-const files=new Map([['/',['index.html','text/html']],['/index.html',['index.html','text/html']],['/i18n.js',['i18n.js','text/javascript']],['/app.js',['app.js','text/javascript']],['/wallet.js',['wallet.js','text/javascript']],['/style.css',['style.css','text/css']]]);
+const files=new Map([["/assets/stake-orbs.svg",["assets/stake-orbs.svg","image/svg+xml"]],["/assets/brand.svg",["assets/brand.svg","image/svg+xml"]],["/assets/logo-1.svg",["assets/logo-1.svg","image/svg+xml"]],["/assets/logo-2.svg",["assets/logo-2.svg","image/svg+xml"]],["/assets/logo-3.svg",["assets/logo-3.svg","image/svg+xml"]],["/assets/logo-4.svg",["assets/logo-4.svg","image/svg+xml"]],['/',['index.html','text/html']],['/index.html',['index.html','text/html']],['/i18n.js',['i18n.js','text/javascript']],['/app.js',['app.js','text/javascript']],['/wallet.js',['wallet.js','text/javascript']],['/style.css',['style.css','text/css']]]);
 export function clientAddress(req){const peer=req.socket.remoteAddress||'';const loopback=['127.0.0.1','::1','::ffff:127.0.0.1'].includes(peer);if(loopback){const forwarded=String(req.headers['x-forwarded-for']||'').split(',').at(-1).trim();if(isIP(forwarded))return forwarded;}return peer;}
 export function createPortalServer(loaders={getAccount,getCommunity,getOverview}){
  const allTraffic=new TokenBuckets({capacity:300,refillPerSecond:150,maxKeys:1});

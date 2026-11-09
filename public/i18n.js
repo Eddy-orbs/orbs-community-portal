@@ -73,7 +73,7 @@ const portalTranslations = {
     "ko": "Orbs 네트워크",
     "ja": "Orbsネットワーク"
   },
-  "A network powered by participation.": {
+  "Staking status": {
     "ko": "커뮤니티가 함께 운영하는 네트워크",
     "ja": "参加が支えるネットワーク。"
   },
@@ -97,7 +97,7 @@ const portalTranslations = {
     "ko": "커뮤니티 거버넌스",
     "ja": "コミュニティガバナンス"
   },
-  "Your voice. Our direction.": {
+  "DAO operation": {
     "ko": "여러분의 참여로 방향을 정합니다",
     "ja": "みんなの声で、進む方向を。"
   },
@@ -189,7 +189,7 @@ const portalTranslations = {
     "ko": "지분 증명 (Proof-of-Stake)",
     "ja": "プルーフ・オブ・ステーク"
   },
-  "Stake. Delegate. Secure.": {
+  "POS Dashboard": {
     "ko": "스테이킹할수록 안전해지는 네트워크",
     "ja": "ステーキングと委任でネットワークを守る。"
   },
@@ -357,7 +357,7 @@ const portalTranslations = {
     "ko": "DAO 거버넌스",
     "ja": "DAOガバナンス"
   },
-  "Decisions, made together.": {
+  "VOTE, Make together": {
     "ko": "함께 내리는 결정.",
     "ja": "みんなで決める。"
   },
@@ -409,13 +409,13 @@ const portalTranslations = {
     "ko": "Orbs 커뮤니티",
     "ja": "Orbsコミュニティ"
   },
-  "Stay connected. Get involved.": {
+  "Stay connected": {
     "ko": "소통하고 함께 참여하세요.",
     "ja": "つながり、参加しよう。"
   },
-  "Latest from X": {
-    "ko": "최근 X 게시물",
-    "ja": "最新のX投稿"
+  "Latest from the blog": {
+    "ko": "최근 블로그 글",
+    "ja": "最新のブログ記事"
   },
   "Latest announcements": {
     "ko": "최근 공지",
@@ -445,9 +445,9 @@ const portalTranslations = {
     "ko": "게시물 이미지 열기",
     "ja": "投稿画像を開く"
   },
-  "Read on X": {
-    "ko": "X에서 보기",
-    "ja": "Xで見る"
+  "Read article": {
+    "ko": "글 읽기",
+    "ja": "記事を読む"
   },
   "Read on Telegram": {
     "ko": "텔레그램에서 보기",
@@ -621,7 +621,7 @@ const portalTranslations = {
     "ko": "조회 전용입니다. 서명이나 트랜잭션이 필요하지 않습니다.",
     "ja": "閲覧専用です。署名やトランザクションは不要です。"
   },
-  "Your participation, in focus.": {
+  "Welcome to Orbs Universe": {
     "ko": "나의 참여 정보를 확인하세요",
     "ja": "自分の参加状況をひと目で。"
   },
