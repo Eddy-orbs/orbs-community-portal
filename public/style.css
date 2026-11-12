@@ -1130,6 +1130,9 @@ h1 {
   background: linear-gradient(120deg, var(--soft), var(--panel));
   border-color: var(--blue);
 }
+.overview-proposal-card > .active-vote {
+  background: transparent;
+}
 .pos-hero {
   grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
 }
@@ -2806,3 +2809,15 @@ html:lang(ja) {
 .voted-info:hover, .voted-info[aria-expanded="true"] { color: var(--ink); }
 .voted-info:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 .voted-tooltip { position: fixed; inset: auto; margin: 0; z-index: 1000; box-sizing: border-box; width: min(300px, calc(100vw - 24px)); padding: 12px 14px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 24px #0002; font-size: 13px; line-height: 1.6; white-space: normal; text-align: left; }
+
+/* Guardian details remain selectable, with a visible selection in both themes. */
+.guardian-modal-header,
+.guardian-modal-details {
+  -webkit-user-select: text;
+  user-select: text;
+}
+.guardian-modal-header ::selection,
+.guardian-modal-details ::selection {
+  background: #6353b8;
+  color: #fff;
+}
